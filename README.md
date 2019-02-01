@@ -1,6 +1,6 @@
 # Wddc Api Samples
 
-Some samples to interact with our API.
+Console application showing how to authenticate and access WDDC's API.
 
 ## Getting Started
 
