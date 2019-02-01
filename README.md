@@ -29,10 +29,6 @@ var tokenResponse = await client.RequestPasswordTokenAsync(new PasswordTokenRequ
 
 Run the solution
 
-```
-dotnet run
-```
-
 ### Built With
 
 * [Flurl](https://flurl.io/)
