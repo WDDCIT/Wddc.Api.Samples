@@ -1,6 +1,6 @@
 # Wddc Api Samples
 
-Some samples to interact with WDDC's API.
+Some samples to interact with our API.
 
 ## Getting Started
 
@@ -33,8 +33,6 @@ Run the solution
 dotnet run
 ```
 
-The command line output will show you which port the project is running on.
-
 ### Built With
 
 * [Flurl](https://flurl.io/)
@@ -44,7 +42,3 @@ The command line output will show you which port the project is running on.
 ## Authors
 
 * **Jason Reddekopp** - *Initial work* - [GitHub](https://github.com/jreddeko)
-
-## License
-
-See the [LICENSE.md](https://github.com/wddcit/wddc.api/blob/master/license.md) file for details
