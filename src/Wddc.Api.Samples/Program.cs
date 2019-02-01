@@ -36,11 +36,11 @@ namespace Wddc.Api.Samples
             var tokenResponse = await client.RequestPasswordTokenAsync(new PasswordTokenRequest
             {
                 Address = disco.TokenEndpoint,
-                ClientId = "woofware_client", // client_id
-                ClientSecret = "D2CB914C-BF08-4CDB-B95A-6082028B13F2",  // your client_secret
+                ClientId = "", // client_id
+                ClientSecret = "",  // your client_secret
 
-                UserName = "woofware_test_user", // your username
-                Password = "rEq3VJy#32R8", // your password
+                UserName = "", // your username
+                Password = "", // your password
                 Scope = "api api_roles offline_access"
             });
 
