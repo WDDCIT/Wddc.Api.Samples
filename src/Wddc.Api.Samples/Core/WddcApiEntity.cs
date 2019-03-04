@@ -5,5 +5,6 @@
     /// </summary>
     public abstract class WddcApiEntity
     {
+        public int Id { get; set; }
     }
 }

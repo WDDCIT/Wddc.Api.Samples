@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{30704B82-03DC-4988-888B-FB7AAC93636F}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>WddcApiExamples</RootNamespace>
-    <AssemblyName>WddcApiExamples</AssemblyName>
+    <RootNamespace>Wddc.Api.Samples</RootNamespace>
+    <AssemblyName>Wddc.Api.Samples</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -58,20 +58,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Core\Address.cs" />
+    <Compile Include="Core\AddToCartRequest.cs" />
     <Compile Include="Core\Listing.cs" />
     <Compile Include="Core\ListOptions.cs" />
-    <Compile Include="Core\Order.cs" />
     <Compile Include="Core\OrderItem.cs" />
-    <Compile Include="Core\OrderListOptions.cs" />
-    <Compile Include="Core\OrderNote.cs" />
     <Compile Include="Core\OrderStatus.cs" />
-    <Compile Include="Core\PlaceOrderResult.cs" />
-    <Compile Include="Core\ProcessOrderRequest.cs" />
-    <Compile Include="Core\Shipment.cs" />
-    <Compile Include="Core\ShipmentItem.cs" />
-    <Compile Include="Core\ShippingMethod.cs" />
+    <Compile Include="Core\OrderStatusRequest.cs" />
+    <Compile Include="Core\OrderStatusResult.cs" />
+    <Compile Include="Core\Product.cs" />
+    <Compile Include="Core\ShoppingCart.cs" />
+    <Compile Include="Core\ShoppingCartItem.cs" />
     <Compile Include="Core\WddcApiEntity.cs" />
+    <Compile Include="Core\Order.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

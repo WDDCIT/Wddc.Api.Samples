@@ -1,14 +1,21 @@
 ﻿namespace Wddc.Api.Samples.Core
 {
-    /// <summary>
-    /// Order item
-    /// </summary>
     public class OrderItem : WddcApiEntity
     {
         /// <summary>
-        /// Order id
+        /// Quantity ordered
         /// </summary>
-        public int OrderId { get; set; }
+        public decimal QuantityOrdered { get; set; }
+
+        /// <summary>
+        /// Quantity invoiced
+        /// </summary>
+        public decimal QuantityInvoiced { get; set; }
+
+        /// <summary>
+        /// Quantity put on back order
+        /// </summary>
+        public decimal QuantityBackOrdered { get; set; }
 
         /// <summary>
         /// Product sku
@@ -16,33 +23,8 @@
         public string ProductSku { get; set; }
 
         /// <summary>
-        /// Quantity
+        /// Wddc product
         /// </summary>
-        public int Quantity { get; set; }
-
-        /// <summary>
-        /// original order item id
-        /// </summary>
-        public int OriginalOrderItemId { get; set; }
-
-        /// <summary>
-        /// original product id
-        /// </summary>
-        public int OriginalProductId { get; set; }
-
-        /// <summary>
-        /// Display order
-        /// </summary>
-        public int DisplayOrder { get; set; }
-
-        /// <summary>
-        /// Pricing level
-        /// </summary>
-        public string PricingLevel { get; set; }
-
-        /// <summary>
-        /// Price
-        /// </summary>
-        public decimal Price { get; set; }
+        public Product Product { get; set; }
     }
 }

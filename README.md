@@ -18,12 +18,12 @@ Make sure to update your client credentials and enter your username + password
 var tokenResponse = await client.RequestPasswordTokenAsync(new PasswordTokenRequest
 {
     Address = disco.TokenEndpoint,
-    ClientId = "", // client_id
+    ClientId = "woofware_client", // client_id
     ClientSecret = "",  // your client_secret
 
-    UserName = "", // your username
+    UserName = "woofware_test_user", // your username
     Password = "", // your password
-    Scope = ""
+    Scope = "api api_roles offline_access"
 });
 ```
 
@@ -34,6 +34,7 @@ Run the solution
 * [Flurl](https://flurl.io/)
 * [IdentityModel](https://identitymodel.readthedocs.io/en/latest/)
 * [Newtonsoft.Json](https://www.newtonsoft.com/json)
+* [Wddc Api](https://api.clientvantage.ca/)
 
 ## Authors
 

@@ -1,28 +1,23 @@
 ﻿namespace Wddc.Api.Samples.Core
 {
     /// <summary>
-    /// Shipment detail
+    /// Update shopping cart
     /// </summary>
-    public class ShipmentItem : WddcApiEntity
+    public class AddToCartRequest
     {
         /// <summary>
-        /// ShipmentId
+        /// Customer identitfier
         /// </summary>
-        public int ShipmentId { get; set; }
+        public string CustomerId { get; set; }
 
         /// <summary>
-        /// Product Sku
+        /// Product sku to add to cart
         /// </summary>
         public string ProductSku { get; set; }
 
         /// <summary>
-        /// Quantity
+        /// Quantity of product to purchase
         /// </summary>
         public int Quantity { get; set; }
-
-        /// <summary>
-        /// Shipment
-        /// </summary>
-        public virtual Shipment Shipment { get; set; }
     }
 }

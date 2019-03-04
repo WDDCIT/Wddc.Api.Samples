@@ -1,17 +1,20 @@
 ﻿using IdentityModel.Client;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Wddc.Api.Samples.Core;
 using Flurl.Http;
 using Flurl;
+using System.Linq;
 
 namespace Wddc.Api.Samples
 {
     public class Program
     {
+        protected static string CustomerId => "32922_WOOFTEST";
+        protected static string ApiUrl => "https://api.clientvantage.ca/api/";
+
         public static void Main(string[] args)
         {
             ProcessOrderExamples().Wait();
@@ -30,119 +33,153 @@ namespace Wddc.Api.Samples
                 return;
             }
 
+            Console.WriteLine(JsonConvert.SerializeObject(disco, Formatting.Indented));
+
             #region 1. Authentication
 
             // sends a token request to WDDC's identity server using the password grant type.
             var tokenResponse = await client.RequestPasswordTokenAsync(new PasswordTokenRequest
             {
                 Address = disco.TokenEndpoint,
-                ClientId = "", // client_id
+                ClientId = "woofware_client", // client_id
                 ClientSecret = "",  // your client_secret
 
-                UserName = "", // your username
+                UserName = "woofware_test_user", // your username
                 Password = "", // your password
                 Scope = "api api_roles offline_access"
             });
 
             if (tokenResponse.IsError)
             {
-                Console.Error.WriteLine(tokenResponse.Error);
+                await Console.Error.WriteLineAsync(tokenResponse.Error);
                 return;
             }
 
             Console.WriteLine(tokenResponse.Json);
 
             #endregion
+            
+            #region 2. Add to shopping cart
 
-            #region 2. Process Order
-
-            // generates a new order
-            var processOrderRequest = GenerateProcessOrderRequest();
-
-            // sends request to WDDC's api which returns a PlaceOrderResult
-            var placeOrderResult = await "https://api-development.clientvantage.ca/api/"
-                .AppendPathSegment("orderprocessing/processorder")
+            var shoppingCart = await ApiUrl
+                .AppendPathSegment("ShoppingCart")
                 .WithOAuthBearerToken(tokenResponse.AccessToken)
-                .PostJsonAsync(processOrderRequest)
-                .ReceiveJson<PlaceOrderResult>();
+                .PostJsonAsync(new AddToCartRequest
+                {
+                    CustomerId = CustomerId,
+                    ProductSku = "103871",
+                    Quantity = 5
+                })
+                .ReceiveJson<ShoppingCart>();
 
-            if (placeOrderResult.Success)
-                Console.WriteLine(JsonConvert.SerializeObject(placeOrderResult, Formatting.Indented));
-            else
-                Console.Error.WriteLine(string.Join(",", placeOrderResult.Errors));
+            Console.WriteLine(JsonConvert.SerializeObject(shoppingCart, Formatting.Indented));
 
             #endregion
 
-            #region 3. View Orders
+            #region 3. Add discontinued product to cart
 
-            // generate order list options
-            var orderListOptions = new OrderListOptions
+            try
             {
-                CustomerId = "99999",
-                Page = 1,
-                PageSize = 25,
-            };
+                // this tries to add a discontinued product to cart
+                var result = await ApiUrl
+                    .AppendPathSegment("ShoppingCart")
+                    .WithOAuthBearerToken(tokenResponse.AccessToken)
+                    .PostJsonAsync(new AddToCartRequest
+                    {
+                        CustomerId = CustomerId,
+                        ProductSku = "112501",
+                        Quantity = 5
+                    })
+                    .ReceiveJson<ShoppingCart>();
+            }
+            catch (FlurlHttpException ex)
+            {
+                // parse content from server response
+                var response = await ex.Call.Response.Content.ReadAsStringAsync();
+                Console.Error.WriteLine(response);
+            }
+
+            #endregion
+
+            #region 4. View shopping cart
+
+            // get shopping cart for specified customer
+            var shoppingCartResponse = await ApiUrl
+                .AppendPathSegment("ShoppingCart")
+                .WithOAuthBearerToken(tokenResponse.AccessToken)
+                .SetQueryParam("customerId", CustomerId)
+                .GetAsync()
+                .ReceiveJson<Listing<ShoppingCart>>();
+
+            Console.WriteLine(JsonConvert.SerializeObject(shoppingCartResponse, Formatting.Indented));
+
+            #endregion
+
+            #region 5. Attempting to view shopping cart you don't have access too
+
+            // will fail with 401
+            try
+            {
+                await ApiUrl
+                   .AppendPathSegment("ShoppingCart")
+                   .WithOAuthBearerToken(tokenResponse.AccessToken)
+                   .SetQueryParam("customerId", "some_other_customer")
+                   .GetAsync()
+                   .ReceiveJson<Listing<ShoppingCart>>();
+            }
+            catch (FlurlHttpException ex)
+            {
+                if (ex.Call.Response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    await Console.Error.WriteLineAsync(ex.Message);
+                else // something else happened
+                    throw ex;
+            }
+
+            #endregion
+
+            #region 6. View Orders
 
             // sends request to WDDC's api which returns a listing of orders
-            var listOrdersResponse = await "https://api-development.clientvantage.ca/api/"
-                .AppendPathSegment("order")
-                .SetQueryParams(orderListOptions)
+            var listOrdersResponse = await ApiUrl
+                .AppendPathSegment("OrderProcessing")
+                .AppendPathSegment("GetOrders")
                 .WithOAuthBearerToken(tokenResponse.AccessToken)
-                .GetJsonAsync<Listing<Order>>();
+                .SetQueryParams(new ListOptions
+                {
+                    Page = 0,
+                    PageSize = 25,
+                    Sort = "createdutc_desc"
+                })
+                .GetAsync()
+                .ReceiveJson<Listing<Order>>();
 
             Console.WriteLine(JsonConvert.SerializeObject(listOrdersResponse, Formatting.Indented));
-            
+
+            #endregion
+
+            // This requires at least one order placed on your account to run
+            #region 7. View order status
+
+            if (listOrdersResponse.Total == 0)
+                return;
+
+            // send order status request to server
+            var orderStatusResult = await ApiUrl
+                .AppendPathSegment("OrderProcessing")
+                .AppendPathSegment("GetOrderStatus")
+                .WithOAuthBearerToken(tokenResponse.AccessToken)
+                .SetQueryParams(new OrderStatusRequest
+                {
+                    CustomerId = listOrdersResponse.Results.FirstOrDefault().CustomerId,
+                    OrderId = listOrdersResponse.Results.FirstOrDefault().Id,
+                    OrderType = listOrdersResponse.Results.FirstOrDefault().OrderType
+                })
+                .GetAsync()
+                .ReceiveJson<OrderStatusResult>();
+
+            Console.WriteLine(JsonConvert.SerializeObject(orderStatusResult, Formatting.Indented));
+
             #endregion
         }
-
-        #region utilities
-
-        protected static ProcessOrderRequest GenerateProcessOrderRequest()
-        {
-            return new ProcessOrderRequest
-            {
-                BillingAddress = GenerateAddress(),
-                OrderItems = GenerateOrderItems(),
-                ShippingMethod = ShippingMethod.RegularShipping.ToString(),
-                PurchaseOrder = "somepo",
-                CustomerId = "99999",
-            };
-        }
-
-        protected static ICollection<OrderItem> GenerateOrderItems()
-        {
-            return new List<OrderItem>{
-                new OrderItem
-                {
-                    // WDDC's item number
-                    ProductSku = "126089",
-                    Quantity = 2,
-                },
-                new OrderItem
-                {                    
-                    // WDDC's item number
-                    ProductSku = "125133",
-                    Quantity = 1,
-                }
-            };
-        }
-
-        protected static Address GenerateAddress()
-        {
-            return new Address
-            {
-                Address1 = "8882 170 St NW",
-                City = "Edmonton",
-                CountryTwoLetterIsoCode = "CA",
-                Email = "guestservices@wem.ca",
-                PhoneNumber = "(780) 444-5330",
-                FirstName = "wested",
-                LastName = "mall",
-                ZipPostalCode = "T5T 4J2",
-                StateProvinceAbbreviation = "AB",
-            };
-        }
-
-        #endregion
     }
 }

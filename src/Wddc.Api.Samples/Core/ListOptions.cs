@@ -10,13 +10,16 @@ namespace Wddc.Api.Samples.Core
         /// <summary>
         /// Starting page
         /// </summary>
-        [JsonProperty("page")]
         public int? Page { get; set; }
 
         /// <summary>
         /// Size of page
         /// </summary>
-        [JsonProperty("pageSize")]
         public int? PageSize { get; set; }
+
+        /// <summary>
+        /// Sort by field_dir
+        /// </summary>
+        public string Sort { get; set; }
     }
 }
