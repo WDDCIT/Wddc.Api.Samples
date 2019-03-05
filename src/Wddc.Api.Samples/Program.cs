@@ -14,7 +14,7 @@ namespace Wddc.Api.Samples
     public class Program
     {
         protected static string CustomerId => "32922_WOOFTEST";
-        protected static string ApiUrl => "http://localhost:49761/api/";
+        protected static string ApiUrl => "https://api.clientvantage.ca/api/";
 
         public static void Main(string[] args)
         {
