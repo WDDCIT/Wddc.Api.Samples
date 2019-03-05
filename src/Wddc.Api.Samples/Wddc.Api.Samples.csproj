@@ -59,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\AddToCartRequest.cs" />
+    <Compile Include="Core\AddToCartResult.cs" />
     <Compile Include="Core\Listing.cs" />
     <Compile Include="Core\ListOptions.cs" />
     <Compile Include="Core\OrderItem.cs" />
