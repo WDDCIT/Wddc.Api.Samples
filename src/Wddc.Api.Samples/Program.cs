@@ -18,9 +18,6 @@ namespace Wddc.Api.Samples
 
         public static void Main(string[] args)
         {
-            // insert products asynchronously to WDDC's shopping cart
-            InsertProductsAsync().Wait();
-
             // runs some different samples on how to interact with WDDC resources
             RunSamplesAsync().Wait();
         }
@@ -69,33 +66,12 @@ namespace Wddc.Api.Samples
             return tokenResponse;
         }
 
-        protected async static Task<AddToCartResult> InsertProductToCartAsync(TokenResponse tokenResponse, string productSku, int quantity)
+        /// <summary>
+        /// Returns a list of wddc product codes
+        /// </summary>
+        /// <returns></returns>
+        protected static IEnumerable<string> GetProducts()
         {
-            return await ApiUrl
-                .AppendPathSegment("ShoppingCart")
-                .WithOAuthBearerToken(tokenResponse.AccessToken)
-                .PostJsonAsync(new AddToCartRequest
-                {
-                    CustomerId = CustomerId,
-                    ProductSku = productSku,
-                    Quantity = quantity
-                })
-                .ReceiveJson<AddToCartResult>();
-        }
-
-        #endregion
-
-        #region Actions
-
-        public async static Task InsertProductsAsync()
-        {
-            #region 1. Authentication
-
-            var tokenResponse = await GetTokenResponseAsync();
-
-            #endregion
-
-            #region 2. Add products
 
             // products that exist in WDDC and won't throw an error
             var goodProducts = new List<string> { "103158", "102680", "126089", "125133", "126231", "106497", "106508", "107170", "107267", "107268", "107269", "113272", "113273", "904967", "904968", "904969", "904970", "904971", "904972", "904973", "904974", "904975", "904976", "904977", "904978", "904979", "904980", "904981", "904983", "904984" };
@@ -114,30 +90,12 @@ namespace Wddc.Api.Samples
                 .Union(discontinuedProducts)
                 .Union(tempUnavailableProducts)
                 .Union(notFoundProducts);
-
-            // insert all products asynchronously
-            var tasks = productsToAdd
-                .Select(_ => InsertProductToCartAsync(tokenResponse, _, (new Random()).Next(0, 10)));
-
-            // wait for all tasks to finish
-            var results = await Task.WhenAll(tasks);
-
-            // group results by error
-            var grouping = results
-                .GroupBy(
-                    _ => new { _.Success, _.Error }, 
-                    _ => _.ProductSku, 
-                    (key, g) => new { key.Success, key.Error, Products = g.ToList() }
-                );
-
-            // products that were inserted
-            Console.WriteLine(JsonConvert.SerializeObject(grouping.Where(_ => _.Success), Formatting.Indented));
-
-            // products that had an error
-            Console.WriteLine(JsonConvert.SerializeObject(grouping.Where(_ => !_.Success), Formatting.Indented));
-
-            #endregion
+            return productsToAdd;
         }
+
+        #endregion
+
+        #region Actions
 
         public async static Task RunSamplesAsync()
         {
@@ -149,29 +107,29 @@ namespace Wddc.Api.Samples
 
             #region 2. Add to shopping cart
 
-            var addToCartResult = await InsertProductToCartAsync(tokenResponse, "103871", 5);
+            var productsToAdd = GetProducts();
 
-            Console.WriteLine(JsonConvert.SerializeObject(addToCartResult, Formatting.Indented));
+            // create bulk insert request
+            var bulkAddToCartRequest = new BulkAddToCartRequest
+            {
+                CustomerId = CustomerId,
+                AddToCartRequests = productsToAdd.Select(_ => new AddToCartRequest { ProductSku = _, Quantity = 5 })
+            };
+
+            // bulk insert products
+            var response = await ApiUrl
+                .AppendPathSegment("ShoppingCart")
+                .AppendPathSegment("bulkinsert")
+                .WithOAuthBearerToken(tokenResponse.AccessToken)
+                .PostJsonAsync(bulkAddToCartRequest)
+                .ReceiveJson<IEnumerable<BulkAddToCartResponse>>();
+
+            // products that were inserted
+            Console.WriteLine(JsonConvert.SerializeObject(response, Formatting.Indented));
 
             #endregion
 
-            #region 3. Add discontinued product to cart
-
-            try
-            {
-                // this tries to add a discontinued product to cart
-                var result = await InsertProductToCartAsync(tokenResponse, "112501", 5);
-            }
-            catch (FlurlHttpException ex)
-            {
-                // parse content from server response
-                var response = await ex.Call.Response.Content.ReadAsStringAsync();
-                Console.Error.WriteLine(response);
-            }
-
-            #endregion
-
-            #region 4. View shopping cart
+            #region 3. View shopping cart
 
             // get shopping cart for specified customer
             var shoppingCartResponse = await ApiUrl
@@ -185,7 +143,7 @@ namespace Wddc.Api.Samples
 
             #endregion
 
-            #region 5. Attempting to view shopping cart you don't have access too
+            #region 4. Attempting to view shopping cart you don't have access too
 
             // will fail with 401
             try
@@ -207,18 +165,18 @@ namespace Wddc.Api.Samples
 
             #endregion
 
-            #region 6. View Orders
+            #region 5. View Orders
 
             // sends request to WDDC's api which returns a listing of orders
             var listOrdersResponse = await ApiUrl
                 .AppendPathSegment("OrderProcessing")
                 .AppendPathSegment("GetOrders")
                 .WithOAuthBearerToken(tokenResponse.AccessToken)
-                .SetQueryParams(new ListOptions
+                .SetQueryParams(new OrderListOptions
                 {
                     Page = 0,
                     PageSize = 25,
-                    Sort = "createdutc_desc"
+                    PurchaseOrderNumber = "some_purchase_order"
                 })
                 .GetAsync()
                 .ReceiveJson<Listing<Order>>();
@@ -228,7 +186,7 @@ namespace Wddc.Api.Samples
             #endregion
 
             // This requires at least one order placed on your account to run
-            #region 7. View order status
+            #region 6. View order status
 
             if (listOrdersResponse.Total == 0)
                 return;
