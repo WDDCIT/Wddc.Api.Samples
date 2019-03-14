@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Wddc.Api.Samples.Core
 {
@@ -31,5 +32,10 @@ namespace Wddc.Api.Samples.Core
         /// Order created date
         /// </summary>
         public DateTime CreatedUtc { get; set; }
+        /// <summary>
+        /// Gets or sets the order items
+        /// </summary>
+        public virtual ICollection<OrderItem> OrderItems { get; set; }
+
     }
 }

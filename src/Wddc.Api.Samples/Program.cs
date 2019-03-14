@@ -136,7 +136,9 @@ namespace Wddc.Api.Samples
                 .AppendPathSegment("OrderProcessing")
                 .AppendPathSegment("GetOrders")
                 .WithOAuthBearerToken(tokenResponse.AccessToken)
-                .SetQueryParam("purchaseOrder", "some_purchase_order2")
+                .SetQueryParam("customId", CustomerId)
+                .SetQueryParam("part", "orderitems") // shows order items
+                .SetQueryParam("purchaseOrder", "some_purchase_order1")
                 .GetAsync()
                 .ReceiveJson<Listing<Order>>();
             Console.WriteLine(JsonConvert.SerializeObject(listOrdersResponse, Formatting.Indented));
