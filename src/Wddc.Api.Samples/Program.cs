@@ -72,7 +72,6 @@ namespace Wddc.Api.Samples
         /// <returns></returns>
         protected static IEnumerable<string> GetProducts()
         {
-
             // products that exist in WDDC and won't throw an error
             var goodProducts = new List<string> { "103158", "102680", "126089", "125133", "126231", "106497", "106508", "107170", "107267", "107268", "107269", "113272", "113273", "904967", "904968", "904969", "904970", "904971", "904972", "904973", "904974", "904975", "904976", "904977", "904978", "904979", "904980", "904981", "904983", "904984" };
 
@@ -113,7 +112,8 @@ namespace Wddc.Api.Samples
             var bulkAddToCartRequest = new BulkAddToCartRequest
             {
                 CustomerId = CustomerId,
-                AddToCartRequests = productsToAdd.Select(_ => new AddToCartRequest { ProductSku = _, Quantity = 5 })
+                OrderItems = productsToAdd.Select(_ => new AddToCartRequest { ProductSku = _, Quantity = 5 }),
+                PurchaseOrder = "some_purchase_order2",
             };
 
             // bulk insert products
@@ -122,90 +122,28 @@ namespace Wddc.Api.Samples
                 .AppendPathSegment("bulkinsert")
                 .WithOAuthBearerToken(tokenResponse.AccessToken)
                 .PostJsonAsync(bulkAddToCartRequest)
-                .ReceiveJson<IEnumerable<BulkAddToCartResponse>>();
+                .ReceiveJson<BulkAddToCartResponse>();
 
             // products that were inserted
             Console.WriteLine(JsonConvert.SerializeObject(response, Formatting.Indented));
 
             #endregion
 
-            #region 3. View shopping cart
-
-            // get shopping cart for specified customer
-            var shoppingCartResponse = await ApiUrl
-                .AppendPathSegment("ShoppingCart")
-                .WithOAuthBearerToken(tokenResponse.AccessToken)
-                .SetQueryParam("customerId", CustomerId)
-                .GetAsync()
-                .ReceiveJson<Listing<ShoppingCart>>();
-
-            Console.WriteLine(JsonConvert.SerializeObject(shoppingCartResponse, Formatting.Indented));
-
-            #endregion
-
-            #region 4. Attempting to view shopping cart you don't have access too
-
-            // will fail with 401
-            try
-            {
-                await ApiUrl
-                   .AppendPathSegment("ShoppingCart")
-                   .WithOAuthBearerToken(tokenResponse.AccessToken)
-                   .SetQueryParam("customerId", "some_other_customer")
-                   .GetAsync()
-                   .ReceiveJson<Listing<ShoppingCart>>();
-            }
-            catch (FlurlHttpException ex)
-            {
-                if (ex.Call.Response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                    await Console.Error.WriteLineAsync(ex.Message);
-                else // something else happened
-                    throw ex;
-            }
-
-            #endregion
-
-            #region 5. View Orders
+            #region 3. Get order by PO
 
             // sends request to WDDC's api which returns a listing of orders
             var listOrdersResponse = await ApiUrl
                 .AppendPathSegment("OrderProcessing")
                 .AppendPathSegment("GetOrders")
                 .WithOAuthBearerToken(tokenResponse.AccessToken)
-                .SetQueryParams(new OrderListOptions
-                {
-                    Page = 0,
-                    PageSize = 25,
-                    PurchaseOrderNumber = "some_purchase_order"
-                })
+                .SetQueryParam("purchaseOrder", "some_purchase_order2")
                 .GetAsync()
                 .ReceiveJson<Listing<Order>>();
-
             Console.WriteLine(JsonConvert.SerializeObject(listOrdersResponse, Formatting.Indented));
 
-            #endregion
-
-            // This requires at least one order placed on your account to run
-            #region 6. View order status
-
-            if (listOrdersResponse.Total == 0)
-                return;
-
-            // send order status request to server
-            var orderStatusResult = await ApiUrl
-                .AppendPathSegment("OrderProcessing")
-                .AppendPathSegment("GetOrderStatus")
-                .WithOAuthBearerToken(tokenResponse.AccessToken)
-                .SetQueryParams(new OrderStatusRequest
-                {
-                    CustomerId = listOrdersResponse.Results.FirstOrDefault().CustomerId,
-                    OrderId = listOrdersResponse.Results.FirstOrDefault().Id,
-                    OrderType = listOrdersResponse.Results.FirstOrDefault().OrderType
-                })
-                .GetAsync()
-                .ReceiveJson<OrderStatusResult>();
-
-            Console.WriteLine(JsonConvert.SerializeObject(orderStatusResult, Formatting.Indented));
+            // grab first order (note: PO is not unique so there could be more than one)
+            var order = listOrdersResponse.Results.FirstOrDefault();
+            Console.WriteLine(JsonConvert.SerializeObject(order, Formatting.Indented));
 
             #endregion
         }

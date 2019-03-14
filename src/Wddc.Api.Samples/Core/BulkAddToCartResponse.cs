@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Wddc.Api.Samples.Core
 {
     public class BulkAddToCartResponse
     {
-        public bool Success { get; set; }
-        public List<string> Products { get; set; }
         public string Error { get; set; }
+        public int ItemAddedCount { get; set; }
+        public ICollection<DroppedProducts> ItemsDropped { get; set; }
     }
 }

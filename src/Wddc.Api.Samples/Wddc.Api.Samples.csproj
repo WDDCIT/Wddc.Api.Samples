@@ -62,6 +62,7 @@
     <Compile Include="Core\AddToCartResult.cs" />
     <Compile Include="Core\BulkAddToCartRequest.cs" />
     <Compile Include="Core\BulkAddToCartResponse.cs" />
+    <Compile Include="Core\DroppedProducts.cs" />
     <Compile Include="Core\Listing.cs" />
     <Compile Include="Core\ListOptions.cs" />
     <Compile Include="Core\OrderItem.cs" />

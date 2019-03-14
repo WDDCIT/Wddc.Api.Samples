@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,11 +12,19 @@ namespace Wddc.Api.Samples.Core
         /// <summary>
         /// Customer identitfier
         /// </summary>
+        [JsonProperty("customerId")]
         public string CustomerId { get; set; }
+
+        /// <summary>
+        /// Purchase order
+        /// </summary>
+        [JsonProperty("purchaseOrder")]
+        public string PurchaseOrder { get; set; }
 
         /// <summary>
         /// Add to cart requests
         /// </summary>
-        public IEnumerable<AddToCartRequest> AddToCartRequests { get; set; }
+        [JsonProperty("orderItems")]
+        public IEnumerable<AddToCartRequest> OrderItems { get; set; }
     }
 }
