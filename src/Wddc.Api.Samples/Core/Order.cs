@@ -29,6 +29,11 @@ namespace Wddc.Api.Samples.Core
         public decimal OrderTotal { get; set; }
 
         /// <summary>
+        /// Status of order
+        /// </summary>
+        public string OrderStatus { get; set; }
+
+        /// <summary>
         /// Order created date
         /// </summary>
         public DateTime CreatedUtc { get; set; }
